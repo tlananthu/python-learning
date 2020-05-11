@@ -39,4 +39,4 @@ for image in images:
 #NOTE: The last image is added twice because of the loop and i2.save
 #This is just a demo, so ignoring that
 
-i2.save('.//temp/image_to_pdf.pdf',save_all=True,append_images=imagelist)
+i2.save('.//temp//image_to_pdf//image_to_pdf.pdf',save_all=True,append_images=imagelist)
