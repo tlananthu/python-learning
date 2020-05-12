@@ -1,10 +1,25 @@
-import feedparser
+def download(url, file):
+    import os, requests
 
-url='https://anchor.fm/s/cf2ac40/podcast/rss'
-NewsFeed=feedparser.parse(url)
+    if not os.path.isfile(file):
+        r=requests.get(url, stream=True)
+        with open(file, 'wb') as f:
+            f.write(r.content)
+    
+def readFeed(url, downloadMatch):
+    import feedparser
+    import json
 
-entries=NewsFeed.entries
+    NewsFeed=feedparser.parse(url)
+    entries=NewsFeed.entries
 
-for entry in entries:
-    for key in entry.keys():
-        print('Key:{0}, Value:{1}'.format(key,entry[key]))
+    for entry in entries:
+        for key in entry.keys():
+            title=str(entry['title']).replace(':','')
+            ext=str(entry['links'][1]['href']).rsplit('.m')[1]
+            href=entry['links'][1]['href']
+            print(ext)
+            #if downloadMatch in title:
+                #download(href, title)
+
+readFeed('https://anchor.fm/s/cf2ac40/podcast/rss', 'Sivagamiyin Sabatham Part 2')
