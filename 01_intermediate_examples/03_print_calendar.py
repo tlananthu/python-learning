@@ -16,10 +16,15 @@ class calendar():
         self.headerBgColour=(73, 109, 137)#rgb
 
         self.dayCell=(100, 100)#dimension, width, height
-        self.colour=(0,0,0)#rgb
-        self.bgColour=(255,255,255)#rgb
+        self.colour=(255,255,255)#rgb #black
+        self.bgColour=(0,0,0)#rgb #white
 
+        self.daysInMonth=0
+        self.headers=[]
+        self.headerImages=[]
         self.dates=[]
+        self.dateImages=[]
+        self.rowImages=[]
         self.outputfolder=''
         self.extn='.png'
 
@@ -40,14 +45,56 @@ class calendar():
     def setDestFolder(self, folder):
         self.outputfolder=folder
 
+    def getFileNameDate(self, day):
+        return str(day).zfill(2)+'.png'
+
+    def getFirstDayDay(self):
+        import datetime
+        d=datetime.date(self.year, self.month, 1)
+        return d.strftime('%A')
+
+    def joinImageV(self, imgs, outname):
+        from PIL import Image
+        images=[Image.open(x) for x in imgs]
+        widths, heights = zip(*(i.size for i in images))
+        maxWidth=max(widths)
+        totalHeight=sum(heights)
+        newImage=Image.new('RGB', (maxWidth, totalHeight))
+        y_offset=0
+        for im in images:
+            newImage.paste(im, (0,y_offset))
+            y_offset+=im.height
+        newImage.save(outname)
+
+    def joinImageH(self, imgs, outname):
+        from PIL import Image
+        images=[Image.open(x) for x in imgs]
+        widths, heights = zip(*(i.size for i in images))
+        totalWidth=sum(widths)
+        maxHeight=max(heights)
+        newImage=Image.new('RGB', (totalWidth, maxHeight))
+        x_offset=0
+        for im in images:
+            newImage.paste(im, (x_offset,0))
+            x_offset+=im.size[0]
+        newImage.save(outname)
+        return str(outname)
+
     def saveHeaderPNG(self):
+        import os
         for key, value in sorted(self.weekdays.items()):
+            self.headers.append(value)
             i=getImage(self.headerCell,  self.headerBgColour, value, (10,10), self.headerColour)
             i.save(self.outputfolder+str(value)+self.extn)
+            self.headerImages.append(self.outputfolder+str(value)+self.extn)
+        self.rowImages=[]
+        self.rowImages.append(self.joinImageH(self.headerImages, self.outputfolder+'Row_1.png'))
         
     def saveDatesPNG(self):
         from calendar import monthrange
+        import os
         days=monthrange(self.year,self.month)[1]
+        self.daysInMonth=days
 
         #fill dates array
         for day in range(days):
@@ -58,24 +105,98 @@ class calendar():
         for date in self.dates:
             i=getImage(self.dayCell,  self.colour, date, (10,10), self.bgColour)
             i.save(self.outputfolder+date+self.extn)
+            self.dateImages.append(self.outputfolder+str(date)+self.extn)
         
         #create a blank day for filling
         i=getImage(self.dayCell,  self.colour, '', (10,10), self.bgColour)
         i.save(self.outputfolder+'00'+self.extn)
 
+    def saveDatesRow(self):
+        fd=self.getFirstDayDay()
+        fr=[]
+        row=[]
+        endBlank=False
+        printedDates=1
+        #fill first row
+        for k,v in self.weekdays.items():
+            if v != fd and not endBlank:
+                row.append(self.outputfolder+'00.png')
+            else:
+                endBlank=True
+                row.append(self.outputfolder+self.getFileNameDate(printedDates))
+                printedDates+=1
+        fr.append(row)
+        #fill all 2+ rows
+        for d in range(printedDates, self.daysInMonth+1):
+            row=[]
+            for k,v in self.weekdays.items():
+                row.append(self.outputfolder+self.getFileNameDate(printedDates))
+                printedDates+=1
+                if printedDates>self.daysInMonth:
+                    break
+            fr.append(row)
+            if printedDates>self.daysInMonth:
+                break
+        
+        lastRow=len(fr[len(fr)-1])
+        if lastRow<7:
+            for i in range(0,7-lastRow):
+                fr[len(fr)-1].append(self.outputfolder+'00.png')
+        
+        #create row images
+        for i,r in enumerate(fr):
+            self.rowImages.append(self.joinImageH(fr[i], self.outputfolder+'Row_{0}.png'.format(i+2)))
+
+    def cleanup(self):
+        import os
+        for h in self.headerImages:
+            os.remove(h)
+        for r in self.rowImages:
+            os.remove(r)
+        for d in self.dateImages:
+            os.remove(d)
+        os.remove(self.outputfolder+'month.png')
+        os.remove(self.outputfolder+'month__.png')
+        os.remove(self.outputfolder+'00.png')
+
+
+    def generateCalendar(self, outfolder):
+        import datetime
+        row=[]
+        m=getImage((self.headerCell[0]*3,self.headerCell[1]), self.headerBgColour, '',(10,10),self.headerColour)
+        m.save(self.outputfolder+str('month__')+self.extn)
+        row.append(self.outputfolder+str('month__')+self.extn)
+        month=datetime.date(self.year, self.month, 1).strftime('%B {0}'.format(self.year))
+        m=getImage(self.headerCell, self.headerBgColour, month,(10,10),self.headerColour)
+        m.save(self.outputfolder+str('month')+self.extn)
+        row.append(self.outputfolder+str('month')+self.extn)
+        row.append(self.outputfolder+str('month__')+self.extn)
+        
+        r=self.joinImageH(row, self.outputfolder+'Row_0.png')
+        self.rowImages=[r]+self.rowImages
+
+        self.joinImageV(self.rowImages, outfolder)
+        self.cleanup()
+
     def saveImage(self, year, month, outname, outfolder):
-        print(f'Saves Calendar image of month {self.month}, year {self.year}')
         self.setYearMonth(year, month)
         self.setDestFolder(outfolder)
         self.saveHeaderPNG()
         self.saveDatesPNG()
+        self.saveDatesRow()
+        print(f'Generating Calendar image of month {self.month}, year {self.year}')
+        self.generateCalendar(outfolder+outname)
 
-c=calendar()
-c.saveImage(2020, 5, "202010.png", 'temp/print_calendar/')
+
+for i in range(1,13):
+    c=calendar()
+    c.saveImage(2020, i, "2020{0}.png".format(str(i).zfill(2)), 'temp/print_calendar/')
 
 #References:
 #https://code-maven.com/create-images-with-python-pil-pillow
 #https://stackoverflow.com/questions/30227466/combine-several-images-horizontally-with-python
+
+#calendar has methods to print text/html calendar
 #import calendar
 #obj=calendar.TextCalendar(1)
 #calendar.prcal(2020)
