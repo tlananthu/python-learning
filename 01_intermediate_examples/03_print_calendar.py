@@ -1,3 +1,4 @@
+#following returns an image with specified text, can be treated as a separate library
 def getImage(size, bgColour, text, textLocn, textColour):
     from PIL import Image, ImageDraw
     img=Image.new('RGB',size, bgColour)
@@ -5,10 +6,11 @@ def getImage(size, bgColour, text, textLocn, textColour):
     drawing.text(textLocn, text, textColour)
     return img
 
+#class calendar which has methods to generate and customize the calendar
 class calendar():
     def __init__(self):
-        self.month=5
-        self.year=2020
+        self.month=5    #month to be printed
+        self.year=2020  #year to be printed
         self.weekdays={0:'Sunday', 1:'Monday', 2:'Tuesday',3:'Wednesday',4:'Thursday',5:'Friday',6:'Saturday'}
 
         self.headerCell=(100,30)#dimension, width, height
@@ -19,40 +21,46 @@ class calendar():
         self.colour=(255,255,255)#rgb #black
         self.bgColour=(0,0,0)#rgb #white
 
-        self.daysInMonth=0
-        self.headers=[]
-        self.headerImages=[]
-        self.dates=[]
-        self.dateImages=[]
-        self.rowImages=[]
-        self.outputfolder=''
-        self.extn='.png'
+        self.daysInMonth=0      #total days in the processing month will be updated
+        self.headerImages=[]    #weekdays images in one row as a list
+        self.dates=[]           #dates in the processing month
+        self.dateImages=[]      #date images in list, will be used to delete temporary files
+        self.rowImages=[]       #row images in list, will be used to join rows and delete temporary files
+        self.outputfolder=''    #output folder where png files will be created
+        self.extn='.png'        #tested with png only
 
+    #method to set Header attributes
     def setHeader(self, dimension, colour, bgColour):
         self.headerCell=dimension
         self.headerColour=colour
         self.headerBgColour=bgColour
 
+    #method to set date column attributes
     def setCell(self, dimension, colour, bgColour):
         self.dayCell=dimension
         self.colour=colour
         self.bgColour=bgColour    
 
+    #method to set year and month to be processed
     def setYearMonth(self, year, month):
         self.year=year
         self.month=month
 
+    #method to set output folder
     def setDestFolder(self, folder):
         self.outputfolder=folder
 
+    #method that returns formatted date file name 01.png etc 
     def getFileNameDate(self, day):
         return str(day).zfill(2)+'.png'
 
+    #method that returns first day of the processing month
     def getFirstDayDay(self):
         import datetime
         d=datetime.date(self.year, self.month, 1)
         return d.strftime('%A')
 
+    #method that joins the row images to form a calendar
     def joinImageV(self, imgs, outname):
         from PIL import Image
         images=[Image.open(x) for x in imgs]
@@ -66,6 +74,7 @@ class calendar():
             y_offset+=im.height
         newImage.save(outname)
 
+    #method that joins each header, date images to form a row
     def joinImageH(self, imgs, outname):
         from PIL import Image
         images=[Image.open(x) for x in imgs]
@@ -80,16 +89,17 @@ class calendar():
         newImage.save(outname)
         return str(outname)
 
+    #method that creates png files for each weekday header (Sun..Sat)
     def saveHeaderPNG(self):
         import os
         for key, value in sorted(self.weekdays.items()):
-            self.headers.append(value)
-            i=getImage(self.headerCell,  self.headerBgColour, value, (10,10), self.headerColour)
+            i=getImage(self.headerCell, self.headerColour, value, (10,10), self.headerBgColour)
             i.save(self.outputfolder+str(value)+self.extn)
             self.headerImages.append(self.outputfolder+str(value)+self.extn)
         self.rowImages=[]
         self.rowImages.append(self.joinImageH(self.headerImages, self.outputfolder+'Row_1.png'))
         
+    #method that creates png files for each day {1..31)
     def saveDatesPNG(self):
         from calendar import monthrange
         import os
@@ -111,6 +121,7 @@ class calendar():
         i=getImage(self.dayCell,  self.colour, '', (10,10), self.bgColour)
         i.save(self.outputfolder+'00'+self.extn)
 
+    #creates row for date
     def saveDatesRow(self):
         fd=self.getFirstDayDay()
         fr=[]
@@ -147,6 +158,7 @@ class calendar():
         for i,r in enumerate(fr):
             self.rowImages.append(self.joinImageH(fr[i], self.outputfolder+'Row_{0}.png'.format(i+2)))
 
+    #method that cleansup/removes temporary files
     def cleanup(self):
         import os
         for h in self.headerImages:
@@ -159,31 +171,38 @@ class calendar():
         os.remove(self.outputfolder+'month__.png')
         os.remove(self.outputfolder+'00.png')
 
-
+    #the joining piece that runs in sequential order
     def generateCalendar(self, outfolder):
         import datetime
+        
+        self.saveHeaderPNG()
+        self.saveDatesPNG()
+        self.saveDatesRow()
+
+        #creates month heading row
         row=[]
-        m=getImage((self.headerCell[0]*3,self.headerCell[1]), self.headerBgColour, '',(10,10),self.headerColour)
+        m=getImage((self.headerCell[0]*3,self.headerCell[1]), self.headerColour, '',(10,10),self.headerBgColour)
         m.save(self.outputfolder+str('month__')+self.extn)
         row.append(self.outputfolder+str('month__')+self.extn)
         month=datetime.date(self.year, self.month, 1).strftime('%B {0}'.format(self.year))
-        m=getImage(self.headerCell, self.headerBgColour, month,(10,10),self.headerColour)
+        m=getImage(self.headerCell, self.headerColour, month,(10,10),self.headerBgColour)
         m.save(self.outputfolder+str('month')+self.extn)
         row.append(self.outputfolder+str('month')+self.extn)
         row.append(self.outputfolder+str('month__')+self.extn)
         
         r=self.joinImageH(row, self.outputfolder+'Row_0.png')
+        #joins with all existing row images
         self.rowImages=[r]+self.rowImages
 
+        #the final calendar view
         self.joinImageV(self.rowImages, outfolder)
         self.cleanup()
 
     def saveImage(self, year, month, outname, outfolder):
         self.setYearMonth(year, month)
         self.setDestFolder(outfolder)
-        self.saveHeaderPNG()
-        self.saveDatesPNG()
-        self.saveDatesRow()
+        self.setCell((100,100),'darkred','white')
+        self.setHeader((100,30),'black','white')
         print(f'Generating Calendar image of month {self.month}, year {self.year}')
         self.generateCalendar(outfolder+outname)
 
