@@ -9,4 +9,4 @@ def printFiles(rootDir):
         if os.path.isfile(file):
             print(str(file))
 
-#printFiles('.')
+printFiles('')
