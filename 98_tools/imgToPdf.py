@@ -25,27 +25,32 @@ def getFilesFolder(folder, verbose):
   import os
 
   files=[]
-  for file in glob.iglob(folder+'**/*.jpg',recursive=False):
-    #extn=str(os.path.split(file)).rsplit('.')
-    if verbose: print('Recongnizing JPG File {0}'.format(file))
-    files.append(file)
+  for file in glob.iglob(folder+'**/*',recursive=False):
+    extn=str(os.path.split(file)).rsplit('.')
+    print(extn)
+    if extn=='jpg' or extn=='jpeg':
+      if verbose: print('Recongnizing JPG File {0}'.format(file))
+      files.append(file)
   return files
 
 def createPDF(imgList, outname, imageQuality, verbose):
   from PIL import Image
 
   imageList=[]
+  foundImages=False
   for i, image in enumerate(imgList):
     if verbose: print('Adding Page {0}'.format(i))
     if i==0:
       image1=Image.open(image)
       img1=image1.convert('RGB')
+      foundImages=True
     else:
       tmpImage=Image.open(image)
       tmp1=tmpImage.convert('RGB')
       imageList.append(tmp1)
-  if verbose: print('Generating PDF {0}'.format(outname))
-  img1.save(outname,save_all=True,append_images=imageList, quality=imageQuality)
+  if foundImages: 
+    if verbose: print('Generating PDF {0}'.format(outname))
+    img1.save(outname,save_all=True,append_images=imageList, quality=imageQuality)
 
 def main():
   import os
