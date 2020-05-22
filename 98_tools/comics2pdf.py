@@ -31,36 +31,39 @@ def isValidImage(filename):
   return imghdr.what(filename)
 
 def removeTempDir(folder):
+    import glob
     import os
 
-    for file in os.listdir(folder):
-        os.remove(folder+'/'+file)
-    os.rmdir(folder)
+    for file in glob.iglob(folder+'/**/*',recursive=True):
+        if os.path.isfile(folder+'/'+file): os.remove(folder+'/'+file)
+
+    for file in glob.iglob(folder+'/**/*',recursive=True):
+        if os.path.isdir(folder+'/'+file): os.rmdir(folder)
 
 def createPDF(imgList, outname, imageQuality, verbose):
-  from PIL import Image
+    from PIL import Image
 
-  imageList=[]
-  foundImages=False
-  imageNum=0
+    imageList=[]
+    foundImages=False
+    imageNum=0
 
-  for image in imgList:
-    #validate image
-    if isValidImage(image)=="jpeg":
-      if verbose: print('Adding Page {0}'.format(imageNum))
-      if imageNum==0:
-        image1=Image.open(image)
-        img1=image1.convert('RGB')
-        foundImages=True
-      else:
-        tmpImage=Image.open(image)
-        tmp1=tmpImage.convert('RGB')
-        imageList.append(tmp1)
-    imageNum+=1
+    for image in imgList:
+        #validate image
+        imageType=isValidImage(image)
+        if verbose: print('Adding Page {0}'.format(imageNum))
+        if imageNum==0:
+            image1=Image.open(image)
+            img1=image1.convert('RGB')
+            foundImages=True
+        else:
+            tmpImage=Image.open(image)
+            tmp1=tmpImage.convert('RGB')
+            imageList.append(tmp1)
+        imageNum+=1
 
-  if foundImages: 
-    if verbose: print('Generating PDF {0}'.format(outname))
-    img1.save(outname,save_all=True,append_images=imageList, quality=imageQuality)
+    if foundImages: 
+        print('Generating PDF {0}'.format(outname))
+        img1.save(outname,save_all=True,append_images=imageList, quality=imageQuality)
 
 class cbz():
     def __init__(self,filename):
@@ -104,10 +107,11 @@ class cbz():
         self.extractall()
 
         #pass images and get a PDF
-        print('Extracted Folder {0}'.format(self.extractFolder))
+        self.printVerbose('Extracted Folder {0}'.format(self.extractFolder))
         imgList=[]
         for file in glob.iglob(self.extractFolder+'**/*', recursive=True):
-            imgList.append(file)
+            if os.path.isfile(file):
+                imgList.append(file)
         createPDF(imgList, outname, imageQuality, self.verbose)
         removeTempDir(self.extractFolder)
 
@@ -148,15 +152,20 @@ class cbr():
     def generatePDF(self, outname, imageQuality):
         import glob
         import os
-
+        
         #extract images first
         self.extractall()
 
         #pass images and get a PDF
-        print('Extracted Folder {0}'.format(self.extractFolder))
+        self.printVerbose('Extracted Folder {0}'.format(self.extractFolder))
         imgList=[]
-        for file in glob.iglob(self.extractFolder+'**/*', recursive=True):
-            imgList.append(file)
+        for file in glob.iglob(self.extractFolder+'/**/*',recursive=True):
+            if os.path.isfile(file):
+                imageType=isValidImage(file)
+                if imageType=="jpeg":
+                    self.printVerbose('Adding File {0}'.format(file))
+                    imgList.append(file)
+        
         createPDF(imgList, outname, imageQuality, self.verbose)
         removeTempDir(self.extractFolder)
 
@@ -176,6 +185,8 @@ def  processFile(srcFolder, imageQuality, destFile, verbose):
         d=cbz(srcFolder)
         if verbose: d.enableVerbose()
         d.generatePDF(destFile, imageQuality)
+    else:
+        verbosePrint('Ignoring non recognized file {0}'.format(srcType), verbose)
 
 def main():
     import os
@@ -196,12 +207,10 @@ def main():
             fn=os.path.split(file)[1]+'.pdf'
             processFile(file, imageQuality, destFolder+'/'+fn, verbose)
     elif os.path.isfile(srcFolder):
-        processFile( srcFolder, imageQuality, destFile, verbose)
+        fn=os.path.split(srcFolder)[1]+'.pdf'
+        processFile( srcFolder, imageQuality, destFile+'/'+fn, verbose)
     else:
         printError('Invalid input specified')
         return
-
-    #files=getFilesFolder(srcFolder,verbose)
-    #createPDF(files, destFile,imageQuality, verbose)
 
 main()
