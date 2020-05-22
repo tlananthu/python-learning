@@ -33,24 +33,34 @@ def getFilesFolder(folder, verbose):
       files.append(file)
   return files
 
+def isValidImage(filename):
+  import imghdr
+  return imghdr.what(filename)
+
 def createPDF(imgList, outname, imageQuality, verbose):
   from PIL import Image
 
   imageList=[]
   foundImages=False
-  for i, image in enumerate(imgList):
-    if verbose: print('Adding Page {0}'.format(i))
-    if i==0:
-      image1=Image.open(image)
-      img1=image1.convert('RGB')
-      foundImages=True
-    else:
-      tmpImage=Image.open(image)
-      tmp1=tmpImage.convert('RGB')
-      imageList.append(tmp1)
+  imageNum=0
+
+  for image in imgList:
+    #validate image
+    if isValidImage(image)=="JPEG":
+      if verbose: print('Adding Page {0}'.format(imageNum))
+      if imageNum==0:
+        image1=Image.open(image)
+        img1=image1.convert('RGB')
+        foundImages=True
+      else:
+        tmpImage=Image.open(image)
+        tmp1=tmpImage.convert('RGB')
+        imageList.append(tmp1)
+    imageNum+=1
+
   if foundImages: 
     if verbose: print('Generating PDF {0}'.format(outname))
-    img1.save(outname,save_all=True,append_images=imageList, quality=imageQuality)
+  img1.save(outname,save_all=True,append_images=imageList, quality=imageQuality)
 
 def main():
   import os
@@ -60,7 +70,7 @@ def main():
   destFolder=os.path.split(destFile)[0]
 
   verbose=True if config.verbose==1 else False
-  imageQuality=100 if not config.imagequality else int(config.imagequality)
+  imageQuality=75 if not config.imagequality else int(config.imagequality)
 
   files=getFilesFolder(srcFolder,verbose)
   createPDF(files, destFile,imageQuality, verbose)
