@@ -9,7 +9,7 @@ def extractImagesJPG(filename, outfolder):
     from PIL import Image
 
     print('Extracting images')
-    doc = fitz.open('resources/05/സർക്കസ്.pdf')
+    doc = fitz.open(filename)
     pages=len(doc)
     suffix=len(str(pages))+1
 
@@ -21,7 +21,7 @@ def extractImagesJPG(filename, outfolder):
             if pix.n > 5:
                 pix= fitz.Pixmap(fitz.csRGB, pix)
             newname="{0}Page_{1}.jpg".format(outfolder,str(i).zfill(suffix))
-            print(newname)
+            print('Extracting Page {0}, Saving as {1}'.format(i,newname))
             saveJPEG(newname, pix)
             pix = None
 
@@ -36,7 +36,7 @@ def cleanup(folder):
 def main():
     outfolder='temp/pdf2image/'
     #extract images from pdf to a folder
-    extractImagesJPG('resources/05/സർക്കസ്.pdf',outfolder)
+    extractImagesJPG('resources/05/സർക്കസ്.pdf',outfolder+'സർക്കസ്_')
     
     #deleting extracted files after conversion
     #cleanup(outfolder)
