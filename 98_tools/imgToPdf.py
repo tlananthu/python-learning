@@ -26,16 +26,16 @@ def getFilesFolder(folder, verbose):
 
   files=[]
   for file in glob.iglob(folder+'**/*',recursive=False):
-    extn=str(os.path.split(file)).rsplit('.')
-    print(extn)
-    if extn=='jpg' or extn=='jpeg':
+    fn,extn=os.path.splitext(file)
+    if extn=='.jpg' or extn=='.jpeg':
       if verbose: print('Recongnizing JPG File {0}'.format(file))
       files.append(file)
   return files
 
 def isValidImage(filename):
   import imghdr
-  return imghdr.what(filename)
+  fileType=imghdr.what(filename)
+  return fileType
 
 def createPDF(imgList, outname, imageQuality, verbose):
   from PIL import Image
@@ -46,7 +46,7 @@ def createPDF(imgList, outname, imageQuality, verbose):
 
   for image in imgList:
     #validate image
-    if isValidImage(image)=="JPEG":
+    if isValidImage(image)=="jpeg":
       if verbose: print('Adding Page {0}'.format(imageNum))
       if imageNum==0:
         image1=Image.open(image)
@@ -60,7 +60,7 @@ def createPDF(imgList, outname, imageQuality, verbose):
 
   if foundImages: 
     if verbose: print('Generating PDF {0}'.format(outname))
-  img1.save(outname,save_all=True,append_images=imageList, quality=imageQuality)
+    img1.save(outname,save_all=True,append_images=imageList, quality=imageQuality)
 
 def main():
   import os
