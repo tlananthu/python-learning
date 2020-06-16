@@ -103,6 +103,7 @@ def main(argv):
 
     outdoc.save('TamilOut.docx')
 
-        
-if __name__ == "__main__":
-    main(sys.argv[1:])
+
+#main(sys.argv[1:])
+
+main(VarNam Sample Sanskrit Source.docx)
