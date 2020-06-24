@@ -113,20 +113,30 @@ def main():
         return
 
     infile=config.infile
-    #check if PDF file exists
-    if not os.path.isfile(infile):
-        print('Input File does not exist')
-        return
-
     outfolder=os.path.split(outfile)[0]+"\\"
-    prefix=os.path.split(outfile)[1].rstrip(".pdf")+"_"
-
     verbose=True if config.verbose==1 else False
     imageQuality=75 if not config.imagequality else int(config.imagequality)
+    prefix=os.path.split(outfile)[1].rstrip(".pdf")+"_"
+
+    # infiles=[]
+
+    # #check if PDF file exists or is it a folder passed
+    # if os.path.isdir(infile):
+    #   for file in os.listdir(infile):
+    #     if file.endswith('.pdf'):
+    #       infiles.append(file)
+    # else:
+    #   if not os.path.isfile(infile):
+    #     print('Input File does not exist')
+    #     return
+    #   infiles.append(infile)
+    
+    if not os.path.isfile(infile):
+      print('Input File does not exist')
+      return
 
     #extract images from pdf to a folder
     images=extractImagesJPG(infile,outfolder+prefix, verbose, imageQuality)
-    print(images)
     createPDF(images,outfile, imageQuality, verbose)
     deleteImages(images, verbose)
 
