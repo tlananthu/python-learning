@@ -102,6 +102,7 @@ def deleteImages(imgList, verbose):
   for image in imgList:
     if verbose: print('Removing File {0}'.format(image))
     os.remove(image)
+
 def main():
     import os
 
