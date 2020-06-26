@@ -118,4 +118,4 @@ class CompressPDF:
           fname=os.path.split(file)[1]
           CompressPDF.compressFile(file, outfolder+str(fname), verbose, imagequality)
         
-#CompressPDF.compressFolder("c:/temp/ic","c:/temp/",True,10)
+CompressPDF.compressFolder("c:/temp/ic","c:/temp/",True,10)
