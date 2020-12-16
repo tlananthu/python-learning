@@ -16,10 +16,11 @@ def readFeed(url, downloadMatch):
     for entry in entries:
         for key in entry.keys():
             title=str(entry['title']).replace(':','')
-            ext=str(entry['links'][1]['href']).rsplit('.m')[1]
+            ext="m"+str(entry['links'][1]['href']).rsplit('.m')[1]
             href=entry['links'][1]['href']
             print(ext)
-            #if downloadMatch in title:
-                #download(href, title)
+            print(title)
+            # if downloadMatch in title:
+            #     download(href, title)
 
-readFeed('https://anchor.fm/s/cf2ac40/podcast/rss', 'Sivagamiyin Sabatham Part 2')
+readFeed('https://anchor.fm/s/cf2ac40/podcast/rss', 'Sivagamiyin Sabatham Part 1')

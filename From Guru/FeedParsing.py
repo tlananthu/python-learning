@@ -12,14 +12,14 @@ class FeedParsing:
         for entry in NewsFeed.entries:
             for val in entry.values():
                 value=str(val)
-                #print (" Value is :"+ value)
+                print (" Value is :"+ value)
                 
-                if all(x in value for x in self.chks_m4a):
-                    #print(" Link is :"+ value)
-                    self.download(val, ".m4a", "Sivagamiyin-Sabatham-Part-2")
-                if all(x in value for x in self.chks_mp3):
-                    #print(" Link is :"+ value)
-                    self.download(val, ".mp3", "Sivagamiyin-Sabatham-Part-2")
+                # if all(x in value for x in self.chks_m4a):
+                #     #print(" Link is :"+ value)
+                #     self.download(val, ".m4a", "Sivagamiyin")
+                # if all(x in value for x in self.chks_mp3):
+                #     #print(" Link is :"+ value)
+                #     self.download(val, ".mp3", "Sivagamiyin")
     
     def download(self, link, ext, matchstr):
         #print(" Downloading ..."+ str(link))
@@ -30,7 +30,7 @@ class FeedParsing:
         value=val.get('href')
         #print(" Name is : "+name+" val is "+ value)
         if matchstr in link:
-            print('Download')
+            print('Download '+name)
             #myfile = requests.get(value)
             #open(os.path.join(self.outdir, name), 'wb').write(myfile.content)
             
